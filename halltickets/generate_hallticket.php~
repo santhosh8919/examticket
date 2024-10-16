@@ -1,0 +1,148 @@
+<?php
+session_start();
+
+$servername = "localhost:3306//";
+$username = "santhosh";
+$password = "santhosh123";
+$dbname = "exam_system";
+
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Check if the user is logged in
+if (!isset($_SESSION['username'])) {
+    header("Location: login.php");
+    exit();
+}
+
+$student_id = $_GET['student_id'];
+$sql = "SELECT * FROM students WHERE student_id = '$student_id'";
+$result = $conn->query($sql);
+
+if ($result->num_rows > 0) {
+    $student = $result->fetch_assoc();
+} else {
+    echo "No student found.";
+    exit();
+}
+
+$sql = "SELECT * FROM subjects WHERE branch = '{$student['branch']}'";
+$subjects = $conn->query($sql);
+
+if ($subjects->num_rows > 0) {
+    $subject_details = $subjects->fetch_all(MYSQLI_ASSOC);
+} else {
+    echo "No subjects found for this branch.";
+    exit();
+}
+
+$conn->close();
+?>
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Exam Hall Ticket</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+        .ticket {
+            width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        .ticket h1 {
+            margin: 0;
+            color: #333;
+            text-align: center;
+        }
+        .ticket p {
+            margin: 10px 0;
+        }
+        .ticket img {
+            width: 100px;
+            height: 100px;
+            border: 2px solid #ccc;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+        .ticket table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+        .ticket table th, .ticket table td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ccc;
+        }
+        .ticket table th {
+            background-color: #f2f2f2;
+        }
+        .ticket button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .ticket button:hover {
+            background-color: #45a049;
+        }
+        .ticket form {
+            text-align: center;
+        }
+    </style>
+    <script>
+        function printTicket() {
+            window.print();
+        }
+    </script>
+</head>
+<body>
+    <div class="ticket">
+        <h1>Exam Hall Ticket</h1>
+        <p><strong>Student ID:</strong> <?php echo $student['student_id']; ?></p>
+        <p><strong>Name:</strong> <?php echo $student['name']; ?></p>
+        <p><strong>Branch:</strong> <?php echo $student['branch']; ?></p>
+        <p><img src="<?php echo htmlspecialchars($student['photo']); ?>" alt="Student Photo"></p>
+        <h2>Exam Details</h2>
+        <table border="1" cellpadding="5" cellspacing="0">
+            <tr>
+                <th>Subject</th>
+                <th>Date</th>
+                <th>Time</th>
+            </tr>
+            <?php foreach ($subject_details as $subject) { ?>
+                <tr>
+                    <td><?php echo $subject['subject_name']; ?></td>
+                    <td><?php echo $subject['exam_date']; ?></td>
+                    <td><?php echo $subject['exam_time']; ?></td>
+                </tr>
+            <?php } ?>
+        </table>
+        <form method="post" action="login.php">
+            <input type="submit" name="logout" value="Logout">
+        </form>
+        <button onclick="printTicket()">Print Hall Ticket</button>
+    </div>
+</body>
+</html>
